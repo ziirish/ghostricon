@@ -122,7 +122,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """)
 
-        monitor = Gdk.Display.get_primary_monitor(Gdk.Display.get_default())
+        display = Gdk.Display.get_default()
+        monitor = Gdk.Display.get_primary_monitor(display)
+        if not monitor:
+            monitor = display.get_monitor(0)
         scale = monitor.get_scale_factor()
         monitor_width = monitor.get_geometry().width / scale
         monitor_height = monitor.get_geometry().height / scale
@@ -183,7 +186,8 @@ class Settings(Gtk.Dialog):
         self.set_modal(True)
         self.set_destroy_with_parent(True)
         self.set_default_response(Gtk.ResponseType.ACCEPT)
-        self.set_resizable(False)
+        self.set_resizable(True)
+        self.set_default_size(500, 500)
         self.set_icon_from_file(config.ICON)
         self.connect('realize', self.on_realize)
         self.init_ui()
@@ -254,7 +258,11 @@ class Settings(Gtk.Dialog):
             column = Gtk.TreeViewColumn(column_title, renderer, text=i)
             self.treeview.append_column(column)
 
-        self.stack.add_titled(self.treeview, "traffic", "Traffic")
+        self.scrollable_treelist = Gtk.ScrolledWindow()
+        self.scrollable_treelist.set_vexpand(True)
+        self.scrollable_treelist.add(self.treeview)
+
+        self.stack.add_titled(self.scrollable_treelist, "traffic", "Traffic")
         self.show_all()
 
     def server_filter_func(self, model, iter, data):
@@ -268,7 +276,10 @@ class Settings(Gtk.Dialog):
             return model[iter][2] == self.current_filter_server
 
     def on_realize(self, *_):
-        monitor = Gdk.Display.get_primary_monitor(Gdk.Display.get_default())
+        display = Gdk.Display.get_default()
+        monitor = Gdk.Display.get_primary_monitor(display)
+        if not monitor:
+            monitor = display.get_monitor(0)
         scale = monitor.get_scale_factor()
         monitor_width = monitor.get_geometry().width / scale
         monitor_height = monitor.get_geometry().height / scale
