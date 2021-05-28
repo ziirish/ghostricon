@@ -18,7 +18,7 @@ class Vpn:
         self.logger.debug("running as " +
                           f"{subprocess.check_output(['/usr/bin/whoami'])}")
         self.logger.debug(f"substitute as {self.user}")
-        # return "No VPN connections found."
+        return "No VPN connections found."
         env = os.environ
         env["USER"] = self.user
         cmd = ["/usr/bin/cyberghostvpn"]
@@ -33,9 +33,9 @@ class Vpn:
         if kind and kind in server_types:
             fargs.insert(0, server_types[kind])
             fargs += args
-        ret = self._run(fargs)
-        # ret =
-        """\
+        # ret = self._run(fargs)
+        ret = \
+            """\
 +-----+----------------------+--------------+
 | No. |     Country Name     | Country Code |
 +-----+----------------------+--------------+

@@ -12,7 +12,7 @@ class Launcher:
     def start(self):
         current = os.path.abspath(__file__)
         cmd = [
-            "/usr/bin/pkexec",
+#            "/usr/bin/pkexec",
             sys.executable,
             current,
             self.socket_path,
