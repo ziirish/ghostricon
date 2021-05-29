@@ -3,8 +3,8 @@ import json
 import typing
 import logging
 
-from ipc.client import Client
-from ipc.utils import to_str, to_bytes
+from ghostricon.ipc.client import Client
+from ghostricon.ipc.utils import to_str, to_bytes
 
 
 class Proxy(Client):

@@ -6,7 +6,10 @@ import typing
 
 from multiprocessing import Process, Queue
 
-from utils import drop_privileges
+try:
+    from ghostricon.ipc.utils import drop_privileges
+except ImportError:
+    from utils import drop_privileges
 
 
 class Server:

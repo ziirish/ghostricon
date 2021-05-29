@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 import os
-import sys
 import trio
+import logging
+from getpass import getuser
 
-import config
-from gui import Indicator
-from daemon import Daemon
-from bridge import Proxy
-from privileged import Launcher
+from ghostricon import config
+from ghostricon.gui import Indicator
+from ghostricon.daemon import Daemon
+from ghostricon.bridge import Proxy
+from ghostricon.privileged import Launcher
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -19,8 +20,8 @@ import trio_gtk                  # noqa: E402
 # pylint: enable=E402
 
 
-async def main():
-    user = sys.argv[1]
+async def async_main():
+    user = getuser()
     socket = config.SOCKET
     if os.path.exists(socket):
         os.unlink(socket)
@@ -42,10 +43,13 @@ async def main():
         nursery.start_soon(daemon.start)
 
 
-if __name__ == "__main__":
-    import logging
+def main():
     logging.basicConfig(level=logging.DEBUG)
 
     logging.info("Starting main process now")
-    trio_gtk.run(main)
+    trio_gtk.run(async_main)
     logging.info("Exiting")
+
+
+if __name__ == "__main__":
+    main()

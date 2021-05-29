@@ -4,9 +4,9 @@ import json
 
 from multiprocessing import Queue
 
-from ipc.server import Server
-from ipc.utils import to_str, to_bytes
-from vpn import Vpn
+from ghostricon.ipc.server import Server
+from ghostricon.ipc.utils import to_str, to_bytes
+from ghostricon.vpn import Vpn
 
 
 class Privileged(Server):

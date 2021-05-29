@@ -1,10 +1,10 @@
 import trio
 import logging
 
-import config
-from gui import Indicator
-from privileged import Launcher
-from bridge import Proxy
+from ghostricon import config
+from ghostricon.gui import Indicator
+from ghostricon.privileged import Launcher
+from ghostricon.bridge import Proxy
 
 
 class Daemon:
@@ -17,10 +17,6 @@ class Daemon:
     async def start(self):
         try:
             self.started = True
-            """
-            while not self.vpn.ready:
-                await trio.sleep(2)
-            """
             self.indicator.set_icon(await self.vpn.send("connected"))
             while self.indicator.running:
                 logging.debug("DAEMON: checking vpn status")

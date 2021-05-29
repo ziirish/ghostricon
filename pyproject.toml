@@ -1,9 +1,11 @@
 [tool.poetry]
 name = "ghostricon"
 version = "0.1.0"
+readme = "README.md"
 description = "CyberGhost GUI"
 authors = ["ziirish <ziirish@ziirish.info>"]
 license = "MIT"
+include = ["data/icons"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
@@ -14,3 +16,7 @@ trio-gtk = "^3.0.0"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+ghostricon = "ghostricon.main:main"
+ghostricon-pkexec = "ghostricon.privileged:main"

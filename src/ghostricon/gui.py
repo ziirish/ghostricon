@@ -3,8 +3,8 @@ import trio
 import sys
 from functools import partial
 
-import config
-from bridge import Proxy
+from ghostricon import config
+from ghostricon.bridge import Proxy
 
 import gi
 
@@ -159,15 +159,17 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         widget.set_sensitive(True)
 
     def menu_control_response(self, widget):
-        widget.set_sensitive(False)
+        # widget.set_sensitive(False)
         control = Settings(self.nursery)
 
         func = partial(self.vpn.send, "list", callback=control.refresh_list)
         self.nursery.start_soon(func)
 
+        """
         control.run()
         control.destroy()
         widget.set_sensitive(True)
+        """
 
     def set_icon(self, active=True):
         if active == self.state:
@@ -206,7 +208,44 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         self.set_icon(not self.state)
 
 
-class Settings(Gtk.Dialog):
+class Settings(Gtk.Window):
+    def __init__(self, nursery):
+        self.nursery = nursery
+
+        Gtk.Window.__init__(self, title="Stack Demo")
+        self.set_border_width(10)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        self.add(vbox)
+
+        stack = Gtk.Stack()
+        stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
+        stack.set_transition_duration(1000)
+
+        checkbutton = Gtk.CheckButton(label="Click me!")
+        stack.add_titled(checkbutton, "check", "Check Button")
+
+        label = Gtk.Label()
+        label.set_markup("<big>A fancy label</big>")
+        stack.add_titled(label, "label", "A label")
+
+        stack_switcher = Gtk.StackSwitcher()
+        stack_switcher.set_stack(stack)
+        vbox.pack_start(stack_switcher, True, True, 0)
+        vbox.pack_start(stack, True, True, 0)
+
+        self.connect("destroy", self.on_destroy)
+        self.show_all()
+
+    def refresh_list(self, servers):
+        print("GOT SERVERS", servers)
+
+    def on_destroy(self, widget):
+        self.destroy()
+
+
+class Settings2(Gtk.Dialog):
     def __init__(self, nursery):
         self.nursery = nursery
         super(Settings, self).__init__(config.APPNAME, None)
@@ -214,8 +253,9 @@ class Settings(Gtk.Dialog):
         self.set_modal(True)
         self.set_destroy_with_parent(True)
         self.set_default_response(Gtk.ResponseType.ACCEPT)
+        self.set_border_width(3)
         self.set_resizable(True)
-        # self.set_default_size(500, 500)
+        self.set_default_size(500, 500)
         self.set_icon_from_file(config.ICON)
         self.connect('realize', self.on_realize)
         # self.show()
@@ -223,8 +263,23 @@ class Settings(Gtk.Dialog):
         self.show_all()
 
     def init_ui(self):
-        """
-        """
+        self.notebook = Gtk.Notebook()
+        self.get_content_area().add(self.notebook)
+
+        self.page1 = Gtk.Box()
+        self.page1.set_border_width(10)
+        # self.page1.add(Gtk.Label(label="Default Page!"))
+        self.page1.add(self.build_vbox_traffic())
+        self.notebook.append_page(self.page1, Gtk.Label(label="Traffic"))
+
+        self.page2 = Gtk.Box()
+        self.page2.set_border_width(10)
+        self.page2.add(Gtk.Label(label="A page with an image for a Title."))
+        self.notebook.append_page(
+            self.page2, Gtk.Image.new_from_icon_name("help-about", Gtk.IconSize.MENU)
+        )
+
+    def init_ui2(self):
 
         vbox0 = Gtk.VBox(spacing=5)
         vbox0.set_border_width(5)
@@ -268,9 +323,11 @@ class Settings(Gtk.Dialog):
         self.stack = stack
 
     def build_vbox_traffic(self):
-        vbox_traffic = Gtk.VBox(spacing=5)
+        vbox_traffic = Gtk.Box()
+        """
         self.spinner_traffic = Gtk.Spinner()
         self.spinner_traffic.start()
+        """
 
         self.server_liststore = Gtk.ListStore(str, str)
         """
@@ -297,7 +354,7 @@ class Settings(Gtk.Dialog):
         self.scrollable_treelist.set_vexpand(True)
         self.scrollable_treelist.add(self.treeview)
 
-        vbox_traffic.pack_start(self.spinner_traffic, True, True, 0)
+        # vbox_traffic.pack_start(self.spinner_traffic, False, False, 0)
         vbox_traffic.pack_start(self.scrollable_treelist, True, True, 0)
         self.vbox_traffic = vbox_traffic
         self.vbox_traffic.show_all()
@@ -309,8 +366,10 @@ class Settings(Gtk.Dialog):
         for server in servers:
             self.server_liststore.append(server)
 
+        """
         self.spinner_traffic.stop()
         self.spinner_traffic.hide()
+        """
         self.scrollable_treelist.show_all()
         """
         spinner = self.stack.get_child_by_name("traffic")

@@ -12,7 +12,7 @@ class Launcher:
     def start(self):
         current = os.path.abspath(__file__)
         cmd = [
-#            "/usr/bin/pkexec",
+            "/usr/bin/pkexec",
             sys.executable,
             current,
             self.socket_path,
@@ -29,11 +29,15 @@ class Launcher:
         self.process.wait()
 
 
-if __name__ == "__main__":
+def main():
     import logging
-    from privileged_async import Privileged
+    from ghostricon.privileged_async import Privileged
     logging.basicConfig(level=logging.DEBUG)
     socket = sys.argv[1]
     user = sys.argv[2]
     server = Privileged(socket, user)
     server.start()
+
+
+if __name__ == "__main__":
+    main()

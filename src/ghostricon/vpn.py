@@ -4,7 +4,7 @@ import typing
 import logging
 import subprocess
 
-from commands import server_types
+from ghostricon.commands import server_types
 
 
 class Vpn:
