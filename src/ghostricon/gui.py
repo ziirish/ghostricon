@@ -3,7 +3,8 @@ import trio
 import sys
 from functools import partial
 
-from ghostricon import config
+from ghostricon import constants
+from ghostricon.config import get_config
 from ghostricon.bridge import Proxy
 
 import gi
@@ -27,14 +28,15 @@ class Indicator:
         self.state = False
 
         self.indicator = AppIndicator3.Indicator.new(
-            config.APPNAME,
-            config.APPNAME,
+            constants.APPNAME,
+            constants.APPNAME,
             AppIndicator3.IndicatorCategory.APPLICATION_STATUS
         )
         self.indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
         self.set_icon()
         self.indicator.set_menu(self.build_menu())
         self.vpn = vpn
+        self.config = get_config()["Global"]
         self.nursery = nursery
         self.running = True
 
@@ -109,13 +111,13 @@ class Indicator:
     def menu_about_response(self, widget):
         widget.set_sensitive(False)
         about = Gtk.AboutDialog()
-        about.set_name(config.APPNAME)
-        about.set_version(config.VERSION)
+        about.set_name(constants.APPNAME)
+        about.set_version(constants.VERSION)
         about.set_copyright("Copyright (c) 2021\nziirish")
-        about.set_comments(config.APPNAME)
-        about.set_logo(GdkPixbuf.Pixbuf.new_from_file(config.ICON))
-        about.set_icon(GdkPixbuf.Pixbuf.new_from_file(config.ICON))
-        about.set_program_name(config.APPNAME)
+        about.set_comments(constants.APPNAME)
+        about.set_logo(GdkPixbuf.Pixbuf.new_from_file(constants.ICON))
+        about.set_icon(GdkPixbuf.Pixbuf.new_from_file(constants.ICON))
+        about.set_program_name(constants.APPNAME)
 
         about.set_license("""
 MIT License
@@ -176,10 +178,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             return
         self.state = active
         if self.state:
-            icon = config.ICON_ACTIVED
+            icon = constants.ICON_ACTIVED
         else:
-            icon = config.ICON_PAUSED
-        self.indicator.set_icon_full(icon, config.APPNAME)
+            icon = constants.ICON_PAUSED
+        self.indicator.set_icon_full(icon, constants.APPNAME)
         self.indicator.set_menu(self.build_menu())
 
     def show_spin(self, menu_item):
@@ -191,11 +193,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     def disconnect(self, menu_item):
         self.nursery.start_soon(self.vpn.send, "disconnect")
-        self.set_icon(False)
+        # self.set_icon(False)
 
     def connect(self, menu_item):
         self.nursery.start_soon(self.vpn.send, "connect")
-        self.set_icon()
+        # self.set_icon()
 
     def list(self, menu_item):
         func = partial(self.vpn.send, "list", callback=print)
@@ -248,7 +250,7 @@ class Settings(Gtk.Window):
 class Settings2(Gtk.Dialog):
     def __init__(self, nursery):
         self.nursery = nursery
-        super(Settings, self).__init__(config.APPNAME, None)
+        super(Settings, self).__init__(constants.APPNAME, None)
 
         self.set_modal(True)
         self.set_destroy_with_parent(True)
@@ -256,7 +258,7 @@ class Settings2(Gtk.Dialog):
         self.set_border_width(3)
         self.set_resizable(True)
         self.set_default_size(500, 500)
-        self.set_icon_from_file(config.ICON)
+        self.set_icon_from_file(constants.ICON)
         self.connect('realize', self.on_realize)
         # self.show()
         self.init_ui()

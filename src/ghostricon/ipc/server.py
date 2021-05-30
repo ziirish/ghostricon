@@ -1,21 +1,44 @@
 import os
 import sys
+import pwd
+import grp
 import asyncio
 import logging
 import typing
 
 from multiprocessing import Process, Queue
 
-try:
-    from ghostricon.ipc.utils import drop_privileges
-except ImportError:
-    from utils import drop_privileges
+
+def drop_privileges(uid_name='nobody'):
+    if os.getuid() != 0:
+        # We're not root so, like, whatever dude
+        return
+
+    # Get the uid/gid from the name
+    running_uid = pwd.getpwnam(uid_name).pw_uid
+    running_gid = grp.getgrnam(uid_name).gr_gid
+
+    # Remove group privileges
+    os.setgroups([])
+
+    # Try setting the new uid/gid
+    os.setgid(running_gid)
+    os.setuid(running_uid)
+
+    # Ensure a very conservative umask
+    # old_umask = os.umask(077)
 
 
 class Server:
     def __init__(self, socket_path: str):
         self.path = socket_path
         self.running = False
+        self.logger = logging.getLogger("IPCSERVER")
+
+    async def run(self):
+        server = await asyncio.start_unix_server(self.handler, self.path)
+        async with server:
+            await server.serve_forever()
 
     def parent(self, reader: Queue, writer: Queue):
         self.from_child = reader
@@ -24,19 +47,11 @@ class Server:
         if hasattr(self, "user"):
             drop_privileges(self.user)
 
-        loop = asyncio.get_event_loop()
-        coro = asyncio.start_unix_server(self.handler, self.path, loop=loop)
-        server = loop.run_until_complete(coro)
-
         logging.debug(f"Serving on {self.path}")
         try:
-            loop.run_forever()
+            asyncio.run(self.run())
         except KeyboardInterrupt:
-            pass
-
-        server.close()
-        loop.run_until_complete(server.wait_closed())
-        loop.close()
+            self.logger.warn("Received KeyboardInterrupt")
 
     def child(self, reader: Queue, writer: Queue):
         pass

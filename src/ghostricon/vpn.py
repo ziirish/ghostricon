@@ -3,8 +3,10 @@ import re
 import typing
 import logging
 import subprocess
+from shlex import quote
 
 from ghostricon.commands import server_types
+from ghostricon.config import get_config
 
 
 class Vpn:
@@ -12,17 +14,21 @@ class Vpn:
 
     def __init__(self, user: str):
         self.user = user
+        self.config = get_config(user)["Global"]
         self.connected()
+        if self.config.getboolean("autostart") and not self._connected:
+            self.connect()
 
     def _run(self, args: typing.List[str]) -> str:
         self.logger.debug("running as " +
                           f"{subprocess.check_output(['/usr/bin/whoami'])}")
         self.logger.debug(f"substitute as {self.user}")
-        return "No VPN connections found."
+        # return "No VPN connections found."
         env = os.environ
         env["USER"] = self.user
         cmd = ["/usr/bin/cyberghostvpn"]
         cmd += args
+        cmd = [quote(x) for x in cmd]
         self.logger.debug(f"COMMAND: {cmd}")
         ret = subprocess.check_output(cmd, env=env).decode("utf-8").rstrip()
         self.logger.debug(f"RET: {ret}")
@@ -33,9 +39,9 @@ class Vpn:
         if kind and kind in server_types:
             fargs.insert(0, server_types[kind])
             fargs += args
-        # ret = self._run(fargs)
-        ret = \
-            """\
+        ret = self._run(fargs)
+        # ret = """
+        """\
 +-----+----------------------+--------------+
 | No. |     Country Name     | Country Code |
 +-----+----------------------+--------------+
@@ -147,12 +153,25 @@ class Vpn:
         return ret != "No VPN connections found."
 
     def disconnect(self):
+        if not self.connected():
+            return
         self._run(["--stop"])
-        self._connected = False
+        # self.connected()
 
-    def connect(self):
-        self._run(["--country-code", "ie",  "--connect"])
-        self._connected = True
+    def connect(self, kind: str = None, country: str = None):
+        if self.connected():
+            return
+        args = ["--connect"]
+        if not kind or kind not in server_types:
+            kind = self.config.get("default_type")
+            if kind not in server_types:
+                kind = "traffic"
+        args.append(server_types[kind])
+        if not country:
+            country = self.config.get("default_country")
+        args += ["--country-code", country]
+        self._run(args)
+        # self.connected()
 
     def connected(self) -> bool:
         self._connected = self.status()
