@@ -17,7 +17,6 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk    # noqa: E402
 
 import trio_gtk                  # noqa: E402
-
 # pylint: enable=E402
 
 

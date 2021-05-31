@@ -11,6 +11,7 @@ import gi
 
 gi.require_version('Gtk', '3.0')
 gi.require_version('Gdk', '3.0')
+gi.require_version('Notify', '0.7')
 gi.require_version('AppIndicator3', '0.1')
 gi.require_version('GdkPixbuf', '2.0')
 
@@ -18,9 +19,12 @@ gi.require_version('GdkPixbuf', '2.0')
 from gi.repository import Gtk            # noqa: E402
 from gi.repository import Gdk            # noqa: E402
 from gi.repository import GLib           # noqa: E402
+from gi.repository import Notify         # noqa: E402
 from gi.repository import AppIndicator3  # noqa: E402
 from gi.repository import GdkPixbuf      # noqa: E402
 # pylint: enable=E402
+
+Notify.init(constants.APPNAME)
 
 
 class Indicator:
@@ -210,6 +214,25 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         self.set_icon(not self.state)
 
 
+class Notification:
+    _cache: Notify.Notification
+    _cache = None
+
+    @classmethod
+    def display(cls, *args):
+        if not get_config().getboolean("Global", "notifications"):
+            return
+        if cls._cache:
+            cls._cache.update(*args)
+            cls._cache.show()
+            return
+        cls._cache = Notify.Notification.new(*args)
+        image = GdkPixbuf.Pixbuf.new_from_file_at_size(constants.ICON, 32, 32)
+        cls._cache.set_icon_from_pixbuf(image)
+        cls._cache.set_image_from_pixbuf(image)
+        cls._cache.show()
+
+
 class Settings(Gtk.Window):
     def __init__(self, nursery):
         self.nursery = nursery
@@ -278,7 +301,8 @@ class Settings2(Gtk.Dialog):
         self.page2.set_border_width(10)
         self.page2.add(Gtk.Label(label="A page with an image for a Title."))
         self.notebook.append_page(
-            self.page2, Gtk.Image.new_from_icon_name("help-about", Gtk.IconSize.MENU)
+            self.page2, Gtk.Image.new_from_icon_name("help-about",
+                                                     Gtk.IconSize.MENU)
         )
 
     def init_ui2(self):

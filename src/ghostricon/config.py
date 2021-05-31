@@ -6,6 +6,7 @@ _config = None
 
 _defaults = {
     "autostart": "false",
+    "notifications": "true",
     "default_type": "traffic",
     "default_country": "ie",
     "disconnect_on_exit": "false",
