@@ -8,6 +8,7 @@ class Client:
         self.path = socket_path
         self.running = False
         self.ready = False
+        self.socket = None
 
     async def start(self):
         try:
@@ -31,8 +32,8 @@ class Client:
         return ret
 
     async def bridge(self):
-        socket = await self.connect()
-        await self.handler(socket)
+        self.socket = await self.connect()
+        await self.handler(self.socket)
 
     async def handler(self, socket: trio.SocketStream):
         pass

@@ -25,9 +25,6 @@ def drop_privileges(uid_name='nobody'):
     os.setgid(running_gid)
     os.setuid(running_uid)
 
-    # Ensure a very conservative umask
-    # old_umask = os.umask(077)
-
 
 class Server:
     def __init__(self, socket_path: str):
@@ -69,7 +66,6 @@ class Server:
     def stop(self):
         self.running = False
         self.children.join()
-        print("I'm the SERVER KILLING MYSELF NOW...")
 
     async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         pass

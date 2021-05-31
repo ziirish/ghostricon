@@ -16,8 +16,6 @@ class Vpn:
         self.user = user
         self.config = get_config(user)["Global"]
         self.connected()
-        if self.config.getboolean("autostart") and not self._connected:
-            self.connect()
 
     def _run(self, args: typing.List[str]) -> str:
         self.logger.debug("running as " +
@@ -154,13 +152,13 @@ class Vpn:
 
     def disconnect(self):
         if not self.connected():
-            return
+            return False
         self._run(["--stop"])
-        # self.connected()
+        return self.connected()
 
     def connect(self, kind: str = None, country: str = None):
         if self.connected():
-            return
+            return True
         args = ["--connect"]
         if not kind or kind not in server_types:
             kind = self.config.get("default_type")
@@ -171,7 +169,7 @@ class Vpn:
             country = self.config.get("default_country")
         args += ["--country-code", country]
         self._run(args)
-        # self.connected()
+        return self.connected()
 
     def connected(self) -> bool:
         self._connected = self.status()

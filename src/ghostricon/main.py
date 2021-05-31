@@ -50,7 +50,7 @@ async def async_main():
 
 
 def main():
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig()
 
     logging.info("Starting main process now")
     trio_gtk.run(async_main)

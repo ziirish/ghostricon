@@ -3,6 +3,7 @@ import json
 import typing
 import logging
 
+from ghostricon.config import get_config
 from ghostricon.ipc.client import Client
 from ghostricon.ipc.utils import to_str, to_bytes
 
@@ -10,6 +11,7 @@ from ghostricon.ipc.utils import to_str, to_bytes
 class Proxy(Client):
     def __init__(self, socket_path: str):
         super(Proxy, self).__init__(socket_path)
+        self.config = get_config()["Global"]
         self.command_in, self.command_out = trio.open_memory_channel(1)
         self.return_in, self.return_out = trio.open_memory_channel(1)
 
@@ -54,8 +56,10 @@ class Proxy(Client):
                    *args,
                    callback: typing.Callable = None,
                    **kwargs):
+        """
         if not self.running:
             return
+        """
         command = {
             "method": method,
             "args": args,

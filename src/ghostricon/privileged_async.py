@@ -4,6 +4,8 @@ import json
 
 from multiprocessing import Queue
 
+from ghostricon.config import get_config
+from ghostricon.gui import Notification
 from ghostricon.ipc.server import Server
 from ghostricon.ipc.utils import to_str, to_bytes
 from ghostricon.vpn import Vpn
@@ -14,6 +16,7 @@ class Privileged(Server):
         super(Privileged, self).__init__(socket_path)
         self.user = user
         self.vpn = Vpn(user)
+        self.config = get_config(user)["Global"]
         self.logger = logging.getLogger("PRIVILEGED")
 
     async def handler(self,
@@ -51,3 +54,5 @@ class Privileged(Server):
                 writer.put(json.dumps(ret))
         except KeyboardInterrupt:
             self.logger.warn("CHILD: received KeyboardInterrupt")
+            if self.config.getboolean("disconnect_on_exit"):
+                self.vpn.disconnect()

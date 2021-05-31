@@ -1,7 +1,7 @@
 import trio
 import logging
 
-from ghostricon.gui import Indicator
+from ghostricon.gui import Indicator, Notification
 from ghostricon.config import get_config
 from ghostricon.privileged import Launcher
 from ghostricon.bridge import Proxy
@@ -18,7 +18,15 @@ class Daemon:
     async def start(self):
         try:
             self.started = True
-            self.indicator.set_icon(await self.vpn.send("connected"))
+            if self.config.getboolean("autostart"):
+                status = await self.vpn.send("connect")
+                if status:
+                    Notification.display("Successfully connected")
+                else:
+                    Notification.display("Failed to connect!")
+            else:
+                status = await self.vpn.send("connected")
+            self.indicator.set_icon(status)
             while self.indicator.running:
                 logging.debug("DAEMON: checking vpn status")
                 ret = await self.vpn.send("changed")
@@ -36,7 +44,11 @@ class Daemon:
             return
         if self.config.getboolean("disconnect_on_exit"):
             logging.debug("DAEMON: disconnect VPN")
-            await self.vpn.send("disconnect")
+            status = await self.vpn.send("disconnect")
+            if not status:
+                Notification.display("Successfully disconnected")
+            else:
+                Notification.display("Failed to disconnect!")
         logging.debug("DAEMON: exiting... now stopping proxy")
         await self.vpn.stop()
         logging.debug("DAEMON: proxy stopped... stopping privileged")

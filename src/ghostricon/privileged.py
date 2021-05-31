@@ -32,7 +32,7 @@ class Launcher:
 def main():
     import logging
     from ghostricon.privileged_async import Privileged
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig()
     socket = sys.argv[1]
     user = sys.argv[2]
     server = Privileged(socket, user)
