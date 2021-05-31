@@ -4,6 +4,8 @@ GhostRicon
 `GhostRicon` is a GUI companion application for the [CyberGhost](https://www.cyberghostvpn.com/en_US/)
 VPN client.
 
+![connect](data/screenshots/connect.png) ![disconnect](data/screenshots/disconnect.png)
+
 How it works
 ------------
 
