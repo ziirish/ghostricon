@@ -6,25 +6,22 @@ from functools import partial
 from ghostricon import constants
 from ghostricon.config import get_config
 from ghostricon.bridge import Proxy
+from ghostricon.gui.notification import Notification
+from ghostricon.gui.configuration import Configuration
 
 import gi
 
 gi.require_version('Gtk', '3.0')
 gi.require_version('Gdk', '3.0')
-gi.require_version('Notify', '0.7')
 gi.require_version('AppIndicator3', '0.1')
 gi.require_version('GdkPixbuf', '2.0')
 
 # pylint: disable=E402
 from gi.repository import Gtk            # noqa: E402
 from gi.repository import Gdk            # noqa: E402
-from gi.repository import GLib           # noqa: E402
-from gi.repository import Notify         # noqa: E402
 from gi.repository import AppIndicator3  # noqa: E402
 from gi.repository import GdkPixbuf      # noqa: E402
 # pylint: enable=E402
-
-Notify.init(constants.APPNAME)
 
 
 class Indicator:
@@ -56,6 +53,16 @@ class Indicator:
             menu_disconnect.connect("activate", self.disconnect)
             menu.append(menu_disconnect)
 
+        menu_favorite = Gtk.MenuItem.new_with_label("Favorites")
+        menu_favorite.set_submenu(self.build_favorite_menu())
+        menu.append(menu_favorite)
+
+        menu.append(Gtk.SeparatorMenuItem())
+
+        menu_configuration = Gtk.MenuItem.new_with_label("Configuration")
+        menu_configuration.connect("activate", self.configuration)
+        menu.append(menu_configuration)
+
         menu.append(Gtk.SeparatorMenuItem())
 
         menu_help = Gtk.MenuItem.new_with_label("Help")
@@ -79,6 +86,15 @@ class Indicator:
         help_menu.append(about_item)
 
         return help_menu
+
+    def build_favorite_menu(self):
+        favorite_menu = Gtk.Menu()
+
+        for i in range(50):
+            entry = Gtk.MenuItem.new_with_label(f"Entry {i}")
+            favorite_menu.append(entry)
+
+        return favorite_menu
 
     def menu_about_response(self, widget):
         widget.set_sensitive(False)
@@ -132,6 +148,15 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         about.destroy()
         widget.set_sensitive(True)
 
+    def configuration(self, widget):
+        widget.set_sensitive(False)
+        configuration = Configuration(self.nursery, self.vpn)
+        response = configuration.run()
+        if response == Gtk.ResponseType.ACCEPT:
+            configuration.save()
+        configuration.destroy()
+        widget.set_sensitive(True)
+
     def set_icon(self, active=True):
         if active == self.state:
             return
@@ -170,25 +195,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     def toggle(self, menu_item):
         self.set_icon(not self.state)
-
-
-class Notification:
-    _cache: Notify.Notification
-    _cache = None
-
-    @classmethod
-    def display(cls, *args):
-        if not get_config().getboolean("Global", "notifications"):
-            return
-        if cls._cache:
-            cls._cache.update(*args)
-            cls._cache.show()
-            return
-        cls._cache = Notify.Notification.new(*args)
-        image = GdkPixbuf.Pixbuf.new_from_file(constants.ICON)
-        cls._cache.set_icon_from_pixbuf(image)
-        cls._cache.set_image_from_pixbuf(image)
-        cls._cache.show()
 
 
 if __name__ == "__main__":
