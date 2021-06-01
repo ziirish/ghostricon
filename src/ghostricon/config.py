@@ -3,6 +3,7 @@ from configparser import ConfigParser
 from pathlib import Path
 
 _config = None
+_cg_config = None
 
 _defaults = {
     "connect_on_startup": "false",
@@ -23,8 +24,25 @@ def get_config_dir(user: str = None) -> Path:
     return _get_home(user) / ".config/ghostricon"
 
 
+def get_cg_config_dir(user: str = None) -> Path:
+    return _get_home(user) / ".cyberghost"
+
+
 def get_config_path(user: str = None) -> Path:
     return get_config_dir(user) / "config.ini"
+
+
+def get_cg_config_path(user: str = None) -> Path:
+    return get_cg_config_dir(user) / "config.ini"
+
+
+def get_cg_config(user: str = None) -> ConfigParser:
+    global _cg_config
+    if _cg_config:
+        return _cg_config
+    _cg_config = ConfigParser()
+    _cg_config.read(get_cg_config_path(user))
+    return _cg_config
 
 
 def get_config(user: str = None) -> ConfigParser:

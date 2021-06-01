@@ -8,3 +8,4 @@ ICON_ACTIVED = os.path.join(ICONDIR, 'ghost-active.svg')
 ICON_PAUSED = os.path.join(ICONDIR, 'ghost-paused.svg')
 ICON = os.path.join(ICONDIR, 'ghost.svg')
 SOCKET = f"/tmp/{APPNAME.lower()}.sock"
+CG_BASE_URL = "https://payment.cyberghostvpn.com/cg/"

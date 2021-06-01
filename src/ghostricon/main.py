@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import os
 import trio
+import httpx
 import logging
 from getpass import getuser
 
 from ghostricon import constants
-from ghostricon.config import get_config, save_config
+from ghostricon.api import CyberghostAPI
+from ghostricon.config import get_config, get_cg_config, save_config
 from ghostricon.gui import Indicator
 from ghostricon.daemon import Daemon
 from ghostricon.bridge import Proxy
@@ -34,6 +36,7 @@ async def async_main():
     vpn = Proxy(socket)
 
     get_config(user)
+    get_cg_config(user)
     try:
         nursery: trio.Nursery
         async with trio.open_nursery() as nursery:

@@ -10,6 +10,7 @@ include = ["data/icons"]
 [tool.poetry.dependencies]
 python = "^3.7"
 trio-gtk = "^3.0.0"
+httpx = "^0.18.1"
 
 [tool.poetry.dev-dependencies]
 
