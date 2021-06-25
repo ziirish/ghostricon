@@ -8,6 +8,7 @@ from ghostricon.config import get_config
 from ghostricon.bridge import Proxy
 from ghostricon.gui.notification import Notification
 from ghostricon.gui.configuration import Configuration
+from ghostricon.gui.settings import Settings
 
 import gi
 
@@ -62,6 +63,10 @@ class Indicator:
         menu_configuration = Gtk.MenuItem.new_with_label("Configuration")
         menu_configuration.connect("activate", self.configuration)
         menu.append(menu_configuration)
+
+        menu_settings = Gtk.MenuItem.new_with_label("VPN Settings")
+        menu_settings.connect("activate", self.settings)
+        menu.append(menu_settings)
 
         menu.append(Gtk.SeparatorMenuItem())
 
@@ -155,6 +160,13 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if response == Gtk.ResponseType.ACCEPT:
             configuration.save()
         configuration.destroy()
+        widget.set_sensitive(True)
+
+    def settings(self, widget):
+        widget.set_sensitive(False)
+        settings = Settings(self.nursery, self.vpn)
+        settings.run()
+        settings.destroy()
         widget.set_sensitive(True)
 
     def set_icon(self, active=True):
