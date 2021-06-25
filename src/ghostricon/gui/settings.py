@@ -76,7 +76,14 @@ class Settings(Gtk.Dialog):
         """
 
     def load(self):
-        return
+        func0 = partial(self.vpn.send, "list", callback=self.refresh_traffic_servers)
+        func1 = partial(self.vpn.send, "list",
+                        "streaming", callback=self.refresh_streaming_servers)
+        func2 = partial(self.vpn.send, "list",
+                        "torrent", callback=self.refresh_torrent_servers)
+        self.nursery.start_soon(func0)
+        self.nursery.start_soon(func1)
+        self.nursery.start_soon(func2)
         """
         self.connect_on_startup.set_active(
             self.config.getboolean("connect_on_startup")
@@ -114,15 +121,66 @@ class Settings(Gtk.Dialog):
         self.notebook = Gtk.Notebook()
         frame1.add(self.notebook)
 
-        self.page1 = Gtk.Box()
-        self.page1.set_border_width(10)
-        self.page1.add(Gtk.Label(label="Default Page!"))
-        self.notebook.append_page(self.page1, Gtk.Label(label="Plain Title"))
+        self.current_filter_server = None
 
-        self.page2 = Gtk.Box()
-        self.page2.set_border_width(10)
-        self.page2.add(Gtk.Label(label="A page with an image for a Title."))
-        self.notebook.append_page(
-            self.page2, Gtk.Image.new_from_icon_name("help-about",
-                                                     Gtk.IconSize.MENU)
-        )
+        self.traffic_liststore = Gtk.ListStore(str, str, bool)
+        self.streaming_liststore = Gtk.ListStore(str, str, bool)
+        self.torrent_liststore = Gtk.ListStore(str, str, bool)
+        default_loading = [["Loading", "..."]]
+        self.build_page("Traffic", self.traffic_liststore, default_loading)
+        self.build_page("Streaming", self.streaming_liststore, default_loading)
+        self.build_page("Torrent", self.torrent_liststore, default_loading)
+
+    def build_page(self, label: str, liststore: Gtk.Widget, servers: list):
+        for server in servers:
+            liststore.append(list(server) + [False])
+
+        # Creating the filter, feeding it with the liststore model
+        server_filter = liststore.filter_new()
+        # setting the filter function, note that we're not using the
+        server_filter.set_visible_func(self.server_filter_func)
+
+        treeview = Gtk.TreeView(model=server_filter)
+        for i, column_title in enumerate(
+            ["Country Name", "Country Code", "Favorite"]
+        ):
+            renderer = Gtk.CellRendererText()
+            column = Gtk.TreeViewColumn(column_title, renderer, text=i)
+            treeview.append_column(column)
+
+        scroll_tree = Gtk.ScrolledWindow()
+        scroll_tree.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll_tree.add(treeview)
+        scroll_tree.set_min_content_height(450)
+        self.notebook.append_page(scroll_tree, Gtk.Label(label))
+        self.show_all()
+
+    def refresh_traffic_servers(self, servers):
+        print(f"TRAFFIC {servers}")
+        self.traffic_liststore.clear()
+        for server in servers:
+            self.traffic_liststore.append(list(server) + [False])
+        self.show_all()
+
+    def refresh_streaming_servers(self, servers):
+        print(f"STREAMING {servers}")
+        self.streaming_liststore.clear()
+        for server in servers:
+            self.streaming_liststore.append(list(server) + [False])
+        self.show_all()
+
+    def refresh_torrent_servers(self, servers):
+        self.torrent_liststore.clear()
+        for server in servers:
+            self.torrent_liststore.append(list(server) + [False])
+        self.show_all()
+
+    def server_filter_func(self, model, iter, data):
+        """Tests if the server in the row is the one in the filter"""
+        if (
+            self.current_filter_server is None
+            or self.current_filter_server == "None"
+        ):
+            return True
+        else:
+            return model[iter][2] == self.current_filter_server

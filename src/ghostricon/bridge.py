@@ -56,10 +56,6 @@ class Proxy(Client):
                    *args,
                    callback: typing.Callable = None,
                    **kwargs):
-        """
-        if not self.running:
-            return
-        """
         command = {
             "method": method,
             "args": args,
