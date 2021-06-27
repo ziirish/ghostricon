@@ -1,7 +1,7 @@
 #!/bin/bash
 if command -v poetry &>/dev/null; then
 	poetry install
-	poetry run ghostricon
+	poetry run ghostricon $*
 else
-	python3 ../src/ghostricon/main.py
+	python3 ../src/ghostricon/main.py $*
 fi

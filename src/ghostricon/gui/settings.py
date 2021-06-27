@@ -156,14 +156,12 @@ class Settings(Gtk.Dialog):
         self.show_all()
 
     def refresh_traffic_servers(self, servers):
-        print(f"TRAFFIC {servers}")
         self.traffic_liststore.clear()
         for server in servers:
             self.traffic_liststore.append(list(server) + [False])
         self.show_all()
 
     def refresh_streaming_servers(self, servers):
-        print(f"STREAMING {servers}")
         self.streaming_liststore.clear()
         for server in servers:
             self.streaming_liststore.append(list(server) + [False])

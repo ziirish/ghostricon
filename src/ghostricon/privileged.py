@@ -4,8 +4,9 @@ import subprocess
 
 
 class Launcher:
-    def __init__(self, socket_path: str, user: str):
+    def __init__(self, socket_path: str, user: str, level: int):
         self.user = user
+        self.level = str(level)
         self.socket_path = socket_path
         self.running = False
 
@@ -16,7 +17,8 @@ class Launcher:
             sys.executable,
             current,
             self.socket_path,
-            self.user
+            self.user,
+            self.level,
         ]
         self.process = subprocess.Popen(cmd)
         self.running = True
@@ -32,7 +34,8 @@ class Launcher:
 def main():
     import logging
     from ghostricon.privileged_async import Privileged
-    logging.basicConfig()
+    level = int(sys.argv[3])
+    logging.basicConfig(level=level)
     socket = sys.argv[1]
     user = sys.argv[2]
     server = Privileged(socket, user)

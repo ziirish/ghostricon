@@ -8,10 +8,15 @@ from ghostricon.bridge import Proxy
 
 
 class Daemon:
-    def __init__(self, indicator: Indicator, vpn: Proxy, privileged: Launcher):
+    def __init__(self,
+                 indicator: Indicator,
+                 vpn: Proxy,
+                 privileged: Launcher,
+                 interval: int = 5):
         self.indicator = indicator
         self.vpn = vpn
         self.privileged = privileged
+        self.interval = interval
         self.config = get_config()["Global"]
         self.started = False
 
@@ -33,7 +38,7 @@ class Daemon:
                 logging.debug(f"DAEMON: status changed: {ret}")
                 if ret:
                     self.indicator.toggle(None)
-                await trio.sleep(2)
+                await trio.sleep(self.interval)
         except KeyboardInterrupt:
             logging.warn("DAEMON: received KeyboardInterrupt")
         finally:
