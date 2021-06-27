@@ -55,8 +55,8 @@ class Server:
 
     def start(self):
         self.running = True
-        self.from_child = Queue()
-        self.to_child = Queue()
+        self.from_child = Queue(1)
+        self.to_child = Queue(1)
 
         self.children = Process(target=self.child, args=(self.to_child, self.from_child))
         self.children.start()
