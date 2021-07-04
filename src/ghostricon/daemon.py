@@ -23,7 +23,7 @@ class Daemon:
     async def start(self):
         try:
             self.started = True
-            if self.config.getboolean("autostart"):
+            if self.config.getboolean("connect_on_startup"):
                 status = await self.vpn.send("connect")
                 if status:
                     Notification.display("Successfully connected")

@@ -144,8 +144,14 @@ class Settings(Gtk.Dialog):
         for i, column_title in enumerate(
             ["Country Name", "Country Code", "Favorite"]
         ):
-            renderer = Gtk.CellRendererText()
-            column = Gtk.TreeViewColumn(column_title, renderer, text=i)
+            if column_title == "Favorite":
+                renderer = Gtk.CellRendererToggle()
+                renderer.connect("toggled",
+                                 getattr(self, f"on_cell_{label.lower()}_toggled"))
+                column = Gtk.TreeViewColumn(column_title, renderer, active=i)
+            else:
+                renderer = Gtk.CellRendererText()
+                column = Gtk.TreeViewColumn(column_title, renderer, text=i)
             treeview.append_column(column)
 
         scroll_tree = Gtk.ScrolledWindow()
@@ -154,6 +160,15 @@ class Settings(Gtk.Dialog):
         scroll_tree.set_min_content_height(450)
         self.notebook.append_page(scroll_tree, Gtk.Label(label))
         self.show_all()
+
+    def on_cell_traffic_toggled(self, widget, path):
+        self.traffic_liststore[path][2] = not self.traffic_liststore[path][2]
+
+    def on_cell_streaming_toggled(self, widget, path):
+        self.streaming_liststore[path][2] = not self.streaming_liststore[path][2]
+
+    def on_cell_torrent_toggled(self, widget, path):
+        self.torrent_liststore[path][2] = not self.torrent_liststore[path][2]
 
     def refresh_traffic_servers(self, servers):
         self.traffic_liststore.clear()

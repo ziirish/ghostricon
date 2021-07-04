@@ -54,10 +54,6 @@ def get_config(user: str = None) -> ConfigParser:
     _config["DEFAULT"] = _defaults
     if "Global" not in _config:
         _config.add_section("Global")
-    if "autostart" in _config["Global"]:
-        _config["Global"]["connect_on_startup"] = \
-            _config["Global"]["autostart"]
-        del _config["Global"]["autostart"]
     return _config
 
 

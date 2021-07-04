@@ -54,6 +54,8 @@ class Configuration(Gtk.Dialog):
         self.vpn = vpn
         self.connect('realize', self.on_realize)
         self.init_ui()
+        select_in_combo(self.server_type,
+                        self.config.get("default_type"))
         self.show_all()
         self.load()
 

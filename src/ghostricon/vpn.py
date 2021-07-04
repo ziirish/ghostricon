@@ -26,14 +26,18 @@ class Vpn:
         env["USER"] = self.user
         cmd = ["/usr/bin/cyberghostvpn"]
         cmd += args
-        cmd = [quote(x) for x in cmd]
+        # cmd = [quote(x) for x in cmd]
         self.logger.debug(f"COMMAND: {cmd}")
-        ret = subprocess.check_output(cmd, env=env).decode("utf-8").rstrip()
-        self.logger.debug(f"RET: {ret}")
-        return ret
+        try:
+            ret = subprocess.check_output(cmd, env=env).decode("utf-8").rstrip()
+            self.logger.debug(f"RET: {ret}")
+            return ret
+        except subprocess.CalledProcessError:
+            self.logger.exception("Command Failed!")
 
     def list(self, kind: str = None, *args) -> typing.List[str]:
         fargs = ["--country-code"]
+        kind = kind.lower() if kind else None
         if kind and kind in server_types:
             fargs.insert(0, server_types[kind])
             fargs += args
@@ -59,19 +63,32 @@ class Vpn:
                 kind: str = None,
                 country: str = None,
                 platform: str = None) -> bool:
+        def _select_from_default(kind_, country_=None):
+            servers = self.list(kind_)
+            default_country_name = country_ or self.config.get("default_country")
+            for name, code in servers:
+                if name == default_country_name:
+                    return code
+
         if self.connected():
             return True
+        default_server_type = self.config.get("default_type").lower()
         args = ["--connect"]
         if not kind or kind not in server_types:
-            kind = self.config.get("default_type")
+            kind = default_server_type
             if kind not in server_types:
                 kind = "traffic"
         args.append(server_types[kind])
         if kind == "streaming":
+            if not platform and default_server_type == kind:
+                platform = self.config.get("default_country")
             args.append(platform)
-        if not country:
-            country = self.config.get("default_country")
-        args += ["--country-code", country]
+            if not country:
+                country = _select_from_default(kind, platform)
+        elif not country:
+            country = _select_from_default(kind)
+        if country:
+            args += ["--country-code", country]
         self._run(args)
         return self.connected()
 
