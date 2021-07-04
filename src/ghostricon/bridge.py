@@ -11,6 +11,7 @@ from ghostricon.ipc.utils import to_str, to_bytes
 class Proxy(Client):
     def __init__(self, socket_path: str):
         super(Proxy, self).__init__(socket_path)
+        self.lock = trio.Lock()
         self.config = get_config()["Global"]
         self.command_in, self.command_out = trio.open_memory_channel(1)
         self.return_in, self.return_out = trio.open_memory_channel(1)
@@ -62,10 +63,11 @@ class Proxy(Client):
             "kwargs": kwargs,
         }
         try:
-            await self.command_in.send(json.dumps(command))
-            ret = json.loads(await self.return_out.receive())
-            if callback:
-                callback(ret)
-            return ret
+            async with self.lock:
+                await self.command_in.send(json.dumps(command))
+                ret = json.loads(await self.return_out.receive())
+                if callback:
+                    callback(ret)
+                return ret
         except trio.EndOfChannel:
             pass
