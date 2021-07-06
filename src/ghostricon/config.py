@@ -45,9 +45,9 @@ def get_cg_config(user: str = None) -> ConfigParser:
     return _cg_config
 
 
-def get_config(user: str = None) -> ConfigParser:
+def get_config(user: str = None, force: bool = False) -> ConfigParser:
     global _config
-    if _config:
+    if _config and not force:
         return _config
     _config = ConfigParser()
     _config.read(get_config_path(user))
@@ -55,6 +55,10 @@ def get_config(user: str = None) -> ConfigParser:
     if "Global" not in _config:
         _config.add_section("Global")
     return _config
+
+
+def reload_config(user: str = None):
+    return get_config(user, True)
 
 
 def save_config(user: str = None):

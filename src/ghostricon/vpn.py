@@ -6,7 +6,7 @@ import subprocess
 from shlex import quote
 
 from ghostricon.commands import server_types
-from ghostricon.config import get_config
+from ghostricon.config import reload_config
 
 
 class Vpn:
@@ -15,8 +15,11 @@ class Vpn:
 
     def __init__(self, user: str):
         self.user = user
-        self.config = get_config(user)["Global"]
+        self.load_config()
         self.connected()
+
+    def load_config(self):
+        self.config = reload_config(self.user)["Global"]
 
     def _run(self, args: typing.List[str]) -> str:
         self.logger.debug("running as " +
@@ -62,7 +65,8 @@ class Vpn:
     def connect(self,
                 kind: str = None,
                 country: str = None,
-                platform: str = None) -> bool:
+                platform: str = None,
+                force: bool = False) -> bool:
         def _select_from_default(kind_, country_=None):
             servers = self.list(kind_)
             default_country_name = country_ or self.config.get("default_country")
@@ -71,7 +75,13 @@ class Vpn:
                     return code
 
         if self.connected():
-            return True
+            if force:
+                self.disconnect()
+            else:
+                return True
+
+        self.load_config()
+
         default_server_type = self.config.get("default_type").lower()
         args = ["--connect"]
         if not kind or kind not in server_types:

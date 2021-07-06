@@ -48,7 +48,7 @@ class Settings(Gtk.Dialog):
         self.set_default_size(500, 500)
         self.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
         self.add_button("Connect", Gtk.ResponseType.ACCEPT)
-        self.config = get_config()["Global"]
+        self.config = get_config()
         self.nursery = nursery
         self.vpn = vpn
         self.connect('realize', self.on_realize)
@@ -56,24 +56,17 @@ class Settings(Gtk.Dialog):
         self.show_all()
         self.load()
 
-    def save(self):
-        return
-        """
-        self.config["connect_on_startup"] = str(
-            self.connect_on_startup.get_active()
-        ).lower()
-        self.config["disconnect_on_exit"] = str(
-            self.disconnect_on_exit.get_active()
-        ).lower()
-        self.config["notifications"] = str(
-            self.notifications.get_active()
-        ).lower()
-        self.config["default_type"] = get_selected_in_combo(self.server_type)
-        default_country = get_selected_in_combo(self.server_country)
-        if default_country != "Loading...":
-            self.config["default_country"] = default_country
+    def save(self, update_default: bool = False):
+        if update_default:
+            current_page = self.notebook.get_current_page()
+            label, liststore = self.pages[current_page]
+            path, _ = getattr(self, f"{label.lower()}_treeview").get_cursor()
+            if path:
+                row = liststore[path]
+                self.config["Global"]["default_type"] = label
+                self.config["Global"]["default_country"] = row[0]
+
         save_config()
-        """
 
     def load(self):
         func0 = partial(self.vpn.send, "list", callback=self.refresh_traffic_servers)
@@ -84,19 +77,6 @@ class Settings(Gtk.Dialog):
         self.nursery.start_soon(func0)
         self.nursery.start_soon(func1)
         self.nursery.start_soon(func2)
-        """
-        self.connect_on_startup.set_active(
-            self.config.getboolean("connect_on_startup")
-        )
-        self.disconnect_on_exit.set_active(
-            self.config.getboolean("disconnect_on_exit")
-        )
-        self.notifications.set_active(
-            self.config.getboolean("notifications")
-        )
-        default_type = self.config.get("default_type")
-        select_in_combo(self.server_type, default_type)
-        """
 
     def on_realize(self, *_):
         display = Gdk.Display.get_default()
@@ -126,14 +106,18 @@ class Settings(Gtk.Dialog):
         self.traffic_liststore = Gtk.ListStore(str, str, bool)
         self.streaming_liststore = Gtk.ListStore(str, str, bool)
         self.torrent_liststore = Gtk.ListStore(str, str, bool)
-        default_loading = [["Loading", "..."]]
-        self.build_page("Traffic", self.traffic_liststore, default_loading)
-        self.build_page("Streaming", self.streaming_liststore, default_loading)
-        self.build_page("Torrent", self.torrent_liststore, default_loading)
+        self.pages = [
+            ["Traffic", self.traffic_liststore],
+            ["Streaming", self.streaming_liststore],
+            ["Torrent", self.torrent_liststore],
+        ]
+        default_loading = [["Loading", "...", False]]
+        for label, liststore in self.pages:
+            self.build_page(label, liststore, default_loading)
 
     def build_page(self, label: str, liststore: Gtk.Widget, servers: list):
         for server in servers:
-            liststore.append(list(server) + [False])
+            liststore.append(list(server))
 
         # Creating the filter, feeding it with the liststore model
         server_filter = liststore.filter_new()
@@ -141,6 +125,8 @@ class Settings(Gtk.Dialog):
         server_filter.set_visible_func(self.server_filter_func)
 
         treeview = Gtk.TreeView(model=server_filter)
+        setattr(self, f"{label.lower()}_treeview", treeview)
+
         for i, column_title in enumerate(
             ["Country Name", "Country Code", "Favorite"]
         ):
@@ -188,7 +174,7 @@ class Settings(Gtk.Dialog):
             self.torrent_liststore.append(list(server) + [False])
         self.show_all()
 
-    def server_filter_func(self, model, iter, data):
+    def server_filter_func(self, model, path, data):
         """Tests if the server in the row is the one in the filter"""
         if (
             self.current_filter_server is None
@@ -196,4 +182,4 @@ class Settings(Gtk.Dialog):
         ):
             return True
         else:
-            return model[iter][2] == self.current_filter_server
+            return model[path][2] == self.current_filter_server

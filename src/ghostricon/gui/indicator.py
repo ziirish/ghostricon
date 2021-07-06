@@ -165,7 +165,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     def settings(self, widget):
         widget.set_sensitive(False)
         settings = Settings(self.nursery, self.vpn)
-        settings.run()
+        response = settings.run()
+        settings.save(response)
+        if response == Gtk.ResponseType.ACCEPT:
+            self.connect(None, force=True)
         settings.destroy()
         widget.set_sensitive(True)
 
@@ -194,7 +197,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         func = partial(self.vpn.send, "disconnect", callback=callback)
         self.nursery.start_soon(func)
 
-    def connect(self, menu_item):
+    def connect(self, menu_item, **kwargs):
         def callback(status):
             self.set_icon(status)
             if not status:
@@ -202,7 +205,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             else:
                 Notification.display("Successfully connected")
 
-        func = partial(self.vpn.send, "connect", callback=callback)
+        func = partial(self.vpn.send, "connect", callback=callback, **kwargs)
         self.nursery.start_soon(func)
 
     def toggle(self, menu_item):
