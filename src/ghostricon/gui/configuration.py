@@ -158,7 +158,6 @@ class Configuration(Gtk.Dialog):
 
     def on_server_type_changed(self, combo: Gtk.ComboBox):
         server_type = get_selected_in_combo(combo)
-        print("Selected: type=%s" % server_type)
         self.refresh_server_country(server_type)
 
     def refresh_server_country(self, server_type: str):

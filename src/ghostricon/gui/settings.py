@@ -66,6 +66,13 @@ class Settings(Gtk.Dialog):
                 self.config["Global"]["default_type"] = label
                 self.config["Global"]["default_country"] = row[0]
 
+        for kind, liststore in self.pages:
+            fav = []
+            for row in liststore:
+                if row[2]:
+                    fav.append(row[0])
+            self.config["Favorite"][kind.lower()] = ";".join(fav)
+
         save_config()
 
     def load(self):
@@ -158,20 +165,26 @@ class Settings(Gtk.Dialog):
 
     def refresh_traffic_servers(self, servers):
         self.traffic_liststore.clear()
+        fav = self.config["Favorite"].get("traffic").split(";")
         for server in servers:
-            self.traffic_liststore.append(list(server) + [False])
+            lst = list(server)
+            self.traffic_liststore.append(lst + [lst[0] in fav])
         self.show_all()
 
     def refresh_streaming_servers(self, servers):
         self.streaming_liststore.clear()
+        fav = self.config["Favorite"].get("streaming").split(";")
         for server in servers:
-            self.streaming_liststore.append(list(server) + [False])
+            lst = list(server)
+            self.streaming_liststore.append(lst + [lst[0] in fav])
         self.show_all()
 
     def refresh_torrent_servers(self, servers):
         self.torrent_liststore.clear()
+        fav = self.config["Favorite"].get("torrent").split(";")
         for server in servers:
-            self.torrent_liststore.append(list(server) + [False])
+            lst = list(server)
+            self.torrent_liststore.append(lst + [lst[0] in fav])
         self.show_all()
 
     def server_filter_func(self, model, path, data):

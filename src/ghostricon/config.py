@@ -54,6 +54,11 @@ def get_config(user: str = None, force: bool = False) -> ConfigParser:
     _config["DEFAULT"] = _defaults
     if "Global" not in _config:
         _config.add_section("Global")
+    if "Favorite" not in _config:
+        _config.add_section("Favorite")
+        _config["Favorite"]["traffic"] = ""
+        _config["Favorite"]["streaming"] = ""
+        _config["Favorite"]["torrent"] = ""
     return _config
 
 
